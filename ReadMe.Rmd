@@ -1,0 +1,130 @@
+---
+title: "ReadMe"
+author: "Alec Barrett, Macy Cripe, Kit Ketjoy, Brendan Tynan, Ethan Hulke, Brianna Campbell, Fiona Romanoschi"
+date: "2023-08-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Table of Contents:
+1. [Introduction](#introduction)
+2. [Objective](#objective)
+3. [Data Collection](#data-collection)
+4. [Data Preprocessing](#data-preprocessing)
+5. [Exploratory Data Analysis](#exploratory-data-analysis)
+6. [Modeling Evaluation](#modeling-evaluation)
+7. [Conclusion](#conclusion)
+8. [Contributors](#contributors)
+
+
+## Introduction <a name="introduction"></a>
+
+Mixed beverage sales analysis and modeling is an important part of the hospitality and restaurant industry. Understanding the factors that influence sales and predicting future sales can help businesses optimize their operations, pricing, and marketing strategies. Our project focuses the analysis of mixed beverage sales and the development of a predictive model to assist in decision-making.
+
+## Objective <a name="objective"></a>
+
+This project's primary objective is to analyze mixed beverage sales data and create a model that can forecast future sales accurately. The model will take into account various factors, such as historical sales data, weather conditions, promotions, and other relevant variables. This will provide insights that may increase profitability and customer satisfaction.
+
+## Data Collection <a name="data-collection"></a>
+
+The first step in this project is collecting relevant data. This may include:
+  
+- Historical mixed beverage sales data
+- Weather data
+- Promotional data
+- Customer demographic data
+- Inventory data
+
+Data can be obtained from https://data.texas.gov/dataset/Mixed-Beverage-Gross-Receipts/naix-2893. This file contains a list of taxpayers required to report mixed beverage gross receipts tax reports in Austin, Texas. Sources such as government data, weather APIs, or market research firms may also be used.
+
+## Data Preprocessing <a name="data-preprocessing"></a>
+
+Data prepocessing techniques that we will use:
+  
+- Data cleaning
+- Feature engineering
+- Data normalization or scaling
+- Creating train and test sets
+
+## Exploratory Data Analysis <a name="exploratory-data-analysis"></a>
+
+```{r message=FALSE}
+library(ggplot2)
+library(dplyr)
+# Load the 'readxl' package if it's not already loaded
+if (!requireNamespace("readxl", quietly = TRUE)) {
+  install.packages("readxl")
+}
+library(readxl)
+
+# Load data from the Excel file
+Mixed_Beverage_Gross_Receipts <- read_xls("Mixed_Beverage_Gross_Receipts.xls")
+austin_projectdata <- Mixed_Beverage_Gross_Receipts %>% 
+  filter(`Location City` == "AUSTIN")
+
+austin_projectdata <- austin_projectdata %>% select(`Location Name`, `Location Address`, `Location Zip`, `Inside/Outside City Limits`, 
+                                                   `Responsibility Begin Date`, `Responsibility End Date`,`Obligation End Date` , `Liquor Receipts`, `Wine Receipts`, `Beer Receipts`, `Cover Charge Receipts`, `Total Receipts`)
+library(tidyr)
+austin_projecttidy <- austin_projectdata %>%
+  pivot_longer(cols = c(`Liquor Receipts`, `Beer Receipts`, `Wine Receipts`, `Cover Charge Receipts`),
+               names_to = "ReceiptType", 
+               values_to = "ReceiptValue")
+
+library(stringr)
+
+top_15_zipcodes <- austin_projecttidy %>%
+  group_by(`Location Zip`) %>%
+  summarise(`Total Receipts` = sum(`Total Receipts`)) %>%
+  top_n(n = 15, wt = `Total Receipts`)
+
+new_locations <- austin_projecttidy %>%
+  mutate(Year = format(`Responsibility Begin Date`, "%Y")) %>%
+  group_by(Year) %>%
+  summarise(NewLocations = n()) %>%
+  arrange(Year)
+ggplot(new_locations, aes(x = Year, y = NewLocations)) +
+  geom_point(color = "blue", size = 2) +
+  labs(x = "Year", y = "Number of New Locations", title = "New Location Starts Over Time") +
+  theme_minimal() +
+  scale_y_continuous(limits = c(0, max(new_locations$NewLocations) * 0.5)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5))
+
+ggplot(new_locations, aes(x = Year, y = NewLocations)) +
+  geom_point(color = "darkgreen", size = 3, alpha = 0.7) +  # Larger, semi-transparent points
+  labs(x = "Year", y = "Number of New Locations", title = "Annual New Alcohol Vendors") +
+  theme_minimal() +
+  scale_y_continuous(limits = c(0, max(new_locations$NewLocations) * 0.5)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, size = 10),  # Adjust font size
+        plot.title = element_text(size = 16, face = "bold"),  # Title customization
+        plot.subtitle = element_text(size = 12),  # Subtitle customization
+        panel.grid.major = element_line(color = "gray", linetype = "dotted"),  # Add gridlines
+        legend.position = "none")
+
+business_closures <- austin_projecttidy %>%
+  mutate(Year = format(`Responsibility End Date`, "%Y")) %>%
+  group_by(Year) %>%
+  summarise(Closures = n()) %>%
+  arrange(Year)
+
+ggplot(business_closures, aes(x = Year, y = Closures)) +
+  geom_point(color = "red", size = 3, alpha = 0.7) +
+  labs(x = "Year", y = "Number of Business Closures", title = "Annual Business Closures Over Time") +
+  theme_minimal() +
+  scale_y_continuous(limits = c(0, max(business_closures$Closures) * 0.1)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5))
+
+```
+
+
+## Contributors <a name="contributors"></a>
+
+- Alec Barrett
+- Fiona R.
+- Masy Cripe
+- Kit Ketjoy
+- Brendan Tynan
+- Brianna Campbell
+- Ethan Hulke
