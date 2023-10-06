@@ -1,0 +1,63 @@
+library(ggplot2)
+library(dplyr)
+# Load the 'readxl' package if it's not already loaded
+if (!requireNamespace("readxl", quietly = TRUE)) {
+  install.packages("readxl")
+}
+library(readxl)
+
+# Load data from the Excel file
+Mixed_Beverage_Gross_Receipts <- read_xls("Mixed_Beverage_Gross_Receipts.xls")
+austin_projectdata <- Mixed_Beverage_Gross_Receipts %>% 
+  filter(`Location City` == "AUSTIN")
+
+austin_projectdata <- austin_projectdata %>% select(`Location Name`, `Location Address`, `Location Zip`, `Inside/Outside City Limits`, 
+                                                   `Responsibility Begin Date`, `Responsibility End Date`,`Obligation End Date` , `Liquor Receipts`, `Wine Receipts`, `Beer Receipts`, `Cover Charge Receipts`, `Total Receipts`)
+library(tidyr)
+austin_projecttidy <- austin_projectdata %>%
+  pivot_longer(cols = c(`Liquor Receipts`, `Beer Receipts`, `Wine Receipts`, `Cover Charge Receipts`),
+               names_to = "ReceiptType", 
+               values_to = "ReceiptValue")
+
+library(stringr)
+
+top_15_zipcodes <- austin_projecttidy %>%
+  group_by(`Location Zip`) %>%
+  summarise(`Total Receipts` = sum(`Total Receipts`)) %>%
+  top_n(n = 15, wt = `Total Receipts`)
+
+new_locations <- austin_projecttidy %>%
+  mutate(Year = format(`Responsibility Begin Date`, "%Y")) %>%
+  group_by(Year) %>%
+  summarise(NewLocations = n()) %>%
+  arrange(Year)
+ggplot(new_locations, aes(x = Year, y = NewLocations)) +
+  geom_point(color = "blue", size = 2) +
+  labs(x = "Year", y = "Number of New Locations", title = "New Location Starts Over Time") +
+  theme_minimal() +
+  scale_y_continuous(limits = c(0, max(new_locations$NewLocations) * 0.5)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5))
+
+ggplot(new_locations, aes(x = Year, y = NewLocations)) +
+  geom_point(color = "darkgreen", size = 3, alpha = 0.7) +  # Larger, semi-transparent points
+  labs(x = "Year", y = "Number of New Locations", title = "Annual New Alcohol Vendors") +
+  theme_minimal() +
+  scale_y_continuous(limits = c(0, max(new_locations$NewLocations) * 0.5)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, size = 10),  # Adjust font size
+        plot.title = element_text(size = 16, face = "bold"),  # Title customization
+        plot.subtitle = element_text(size = 12),  # Subtitle customization
+        panel.grid.major = element_line(color = "gray", linetype = "dotted"),  # Add gridlines
+        legend.position = "none")
+
+business_closures <- austin_projecttidy %>%
+  mutate(Year = format(`Responsibility End Date`, "%Y")) %>%
+  group_by(Year) %>%
+  summarise(Closures = n()) %>%
+  arrange(Year)
+
+ggplot(business_closures, aes(x = Year, y = Closures)) +
+  geom_point(color = "red", size = 3, alpha = 0.7) +
+  labs(x = "Year", y = "Number of Business Closures", title = "Annual Business Closures Over Time") +
+  theme_minimal() +
+  scale_y_continuous(limits = c(0, max(business_closures$Closures) * 0.1)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5))
