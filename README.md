@@ -43,9 +43,9 @@ Data preprocessing techniques that we will use:
 
 Hypothesi:
 
-1. Different times of the year will yield different levels of mixed beverage sales, with January being the lowest.
-2. Cloudy weather will yield different types of mixed beverage sales than that of sunny weather.
-3. Mixed beverage sales tax will have little effect on the amount of sales.
+1. Higher consumer income correlates to higher ticket alcohol receipts.
+2. Downtonwn zip codes of larger cities will have the largest number of receipts.
+3. A longer active alcohol license correlates with an increased number of receipts.
 4. Beer sales will far outweigh that of liqour and wine sales.
 
 
