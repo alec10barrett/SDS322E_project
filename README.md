@@ -46,7 +46,7 @@ Hypothesi:
 1. Different times of the year will yield different levels of mixed beverage sales, with January being the lowest.
 2. Cloudy weather will yield different types of mixed beverage sales than that of sunny weather.
 3. Mixed beverage sales tax will have little effect on the amount of sales.
-4. Men will purchase more mixed beverages than women.
+4. Beer sales will far outweigh that of liqour and wine sales.
 
 
 References:
